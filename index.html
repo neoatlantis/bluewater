@@ -1,0 +1,39 @@
+<html>
+<head>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/4.12.1/firebase.js"></script>
+<script src="https://cdn.firebase.com/libs/firebaseui/2.5.1/firebaseui.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/2.5.1/firebaseui.css" />
+<script>
+var config = {
+    apiKey: "AIzaSyDuWMJVU4_Uc4xBIZwNGHHktSoxB-suH-0",
+    authDomain: "bluewater-neoatlantis.firebaseapp.com",
+    databaseURL: "https://bluewater-neoatlantis.firebaseio.com",
+};
+firebase.initializeApp(config);
+</script>
+
+<script src="bluewater.js"></script>
+<link type="text/css" rel="stylesheet" href="bluewater.css" />
+<title>BlueWater 2-Factor Authenticator</title>
+
+</head>
+<body>
+
+<div id="session" class="status-unauthenticated">
+    <div class="when-unauthenticated">
+        <div id="firebase-login"></div>
+    </div>
+
+    <div class="when-authenticated">
+        <button name="signout" type="button">Sign Out</button>
+    </div>
+
+    <div class="when-authenticated">
+        authenticated
+    </div>
+</div>
+
+</body>
+</html>

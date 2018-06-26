@@ -1,0 +1,4 @@
+.status-unauthenticated .when-unauthenticated { display: block }
+.status-unauthenticated .when-authenticated { display: none }
+.status-authenticated .when-unauthenticated { display: none }
+.status-authenticated .when-authenticated { display: block }
