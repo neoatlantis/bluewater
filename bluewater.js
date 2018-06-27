@@ -1,5 +1,5 @@
 "use strict";
-// Transcrypt'ed from Python, 2018-06-27 02:01:23
+// Transcrypt'ed from Python, 2018-06-27 02:36:49
 function __init__ () {
     var __symbols__ = ['__py3.6__', '__esv6__'];
     var __all__ = {};
@@ -2292,12 +2292,31 @@ function __init__ () {
 								self.eventUninitialized.call ();
 							}
 							else {
-								console.log ('Mainkey got.', self.mainkey);
+								console.log ('Mainkey retrieved.');
 								self.eventUndecrypted.call ();
 							}
 						});},
 						get decryptMainkey () {return __get__ (this, async function (self, passphrase) {
-							// pass;
+							try {
+								self.privateKey = openpgp.key.readArmored (self.mainkey) ['keys'] [0];
+								await self.privateKey.decrypt (passphrase);
+							}
+							catch (__except0__) {
+								// pass;
+							}
+							finally {
+								if (self.privateKey && self.privateKey.primaryKey && self.privateKey.primaryKey.isDecrypted) {
+									console.log ('Private key decrypted.');
+									self.publicKey = self.privateKey.toPublic ();
+									self.eventDecrypted.call ();
+									return true;
+								}
+								else {
+									console.error ('Private key decryption failure.');
+									self.eventUndecrypted.call ();
+								}
+							}
+							return false;
 						});},
 						get setMainPassphrase () {return __get__ (this, async function (self, passphrase) {
 							var uid = self.session.getCurrentUser ().uid;
@@ -2320,7 +2339,6 @@ function __init__ () {
 			}
 		}
 	);
-
 	__nest__ (
 		__all__,
 		'session', {
@@ -2424,12 +2442,15 @@ function __init__ () {
 						get open () {return __get__ (this, function (self) {
 							$ (self.DIALOG_INIT).dialog ('open');
 						});},
+						get close () {return __get__ (this, function (self) {
+							$ (self.DIALOG_INIT).dialog ('close');
+						});},
 						get onSetMainPassphrase () {return __get__ (this, async function (self) {
 							var password1 = $ (self.DIALOG_INIT).find ('[name="password1"]').val ();
 							var password2 = $ (self.DIALOG_INIT).find ('[name="password2"]').val ();
 							console.log ('set', password1, password2);
 							await self.mainkey.setMainPassphrase (password1);
-							$ (self.DIALOG_INIT).dialog ('close');
+							self.close ();
 						});}
 					});
 					var UIMainkeyDecryptor = __class__ ('UIMainkeyDecryptor', [object], {
@@ -2446,8 +2467,13 @@ function __init__ () {
 						get __bindEvents () {return __get__ (this, function (self) {
 							// pass;
 						});},
-						get onDecrypt () {return __get__ (this, function (self) {
-							// pass;
+						get onDecrypt () {return __get__ (this, async function (self) {
+							var password = $ (self.DIALOG_DECRYPT).find ('[name="password"]').val ();
+							await self.mainkey.decryptMainkey (password);
+							self.close ();
+						});},
+						get close () {return __get__ (this, function (self) {
+							$ (self.DIALOG_DECRYPT).dialog ('close');
 						});},
 						get open () {return __get__ (this, function (self) {
 							$ (self.DIALOG_DECRYPT).dialog ('open');
@@ -2482,6 +2508,7 @@ function __init__ () {
 			}
 		}
 	);
+
 	__nest__ (
 		__all__,
 		'ui.session', {

@@ -27,11 +27,30 @@ class Mainkey:
             console.log("Mainkey not set.")
             self.eventUninitialized.call() 
         else:
-            console.log("Mainkey got.", self.mainkey)
+            console.log("Mainkey retrieved.")
             self.eventUndecrypted.call()
 
     async def decryptMainkey(self, passphrase):
         # if error, raise eventUndecrypted again
+        try:
+            self.privateKey = openpgp.key.readArmored(self.mainkey)["keys"][0]
+            await self.privateKey.decrypt(passphrase)
+        except:
+            pass
+        finally:
+            if \
+                self.privateKey and\
+                self.privateKey.primaryKey and\
+                self.privateKey.primaryKey.isDecrypted\
+            :
+                # decryption confirmed successful
+                console.log("Private key decrypted.")
+                self.publicKey = self.privateKey.toPublic()
+                self.eventDecrypted.call()
+                return True
+            else:
+                console.error("Private key decryption failure.")
+                self.eventUndecrypted.call()
         return False
 
     async def setMainPassphrase(self, passphrase):

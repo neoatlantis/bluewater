@@ -64,8 +64,8 @@ class UIMainkeyDecryptor:
     def __bindEvents(self):
         pass
 
-    def onDecrypt(self):
-        password = S(self.DIALOG_INIT).find('[name="password"]').val()
+    async def onDecrypt(self):
+        password = S(self.DIALOG_DECRYPT).find('[name="password"]').val()
         await self.mainkey.decryptMainkey(password)
         self.close()
 
