@@ -1,0 +1,17 @@
+{
+  "rules": {
+    "$uid": {
+      ".read":  "auth != null && auth.uid === $uid",
+      ".write": "auth != null && auth.uid === $uid",
+      "__main_key__": {
+        ".validate": "newData.isString() && newData.val().length < 1000"
+      },
+      "$name": {
+        ".validate": "$name.length < 128 && newData.hasChildren(['tag', 'text'])",
+        "tag":  { ".validate": "newData.isString() && newData.val().length < 100" },
+        "text": { ".validate": "newData.isString() && newData.val().length < 1024" },
+        "$others": { ".validate": false }
+      }
+    }
+  }
+}

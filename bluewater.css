@@ -1,4 +1,6 @@
-.status-unauthenticated .when-unauthenticated { display: block }
-.status-unauthenticated .when-authenticated { display: none }
-.status-authenticated .when-unauthenticated { display: none }
-.status-authenticated .when-authenticated { display: block }
+.hidden { display: none }
+.no-close .ui-dialog-titlebar-close { display: none; }
+
+#session .when-unauthenticated,.when-authenticated { display: none }
+.status-unauthenticated .when-unauthenticated { display: block !important }
+.status-authenticated .when-authenticated { display: block !important }

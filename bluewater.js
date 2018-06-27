@@ -1,5 +1,5 @@
 "use strict";
-// Transcrypt'ed from Python, 2018-06-26 02:25:26
+// Transcrypt'ed from Python, 2018-06-27 02:01:23
 function __init__ () {
     var __symbols__ = ['__py3.6__', '__esv6__'];
     var __all__ = {};
@@ -2258,6 +2258,69 @@ function __init__ () {
 			}
 		}
 	);
+
+	__nest__ (
+		__all__,
+		'mainkey', {
+			__all__: {
+				__inited__: false,
+				__init__: function (__all__) {
+					var __name__ = 'mainkey';
+					var Event = __init__ (__world__.event).Event;
+					var Mainkey = __class__ ('Mainkey', [object], {
+						__module__: __name__,
+						FIREBASE_MAINKEY: '__main_key__',
+						get __init__ () {return __get__ (this, function (self, session) {
+							self.session = session;
+							self.__bindEvents ();
+						});},
+						get __bindEvents () {return __get__ (this, function (self) {
+							self.eventUninitialized = Event ();
+							self.eventUndecrypted = Event ();
+							self.eventDecrypted = Event ();
+							self.session.eventLogin.append (self.onLogin);
+						});},
+						get __getMainkeyPath () {return __get__ (this, function (self) {
+							var uid = self.session.getCurrentUser ().uid;
+							return (('/' + uid) + '/') + self.FIREBASE_MAINKEY;
+						});},
+						get onLogin () {return __get__ (this, async function (self) {
+							var getMainkey = await firebase.database ().ref (self.__getMainkeyPath ()).once ('value');
+							self.mainkey = getMainkey.val ();
+							if (!(self.mainkey)) {
+								console.log ('Mainkey not set.');
+								self.eventUninitialized.call ();
+							}
+							else {
+								console.log ('Mainkey got.', self.mainkey);
+								self.eventUndecrypted.call ();
+							}
+						});},
+						get decryptMainkey () {return __get__ (this, async function (self, passphrase) {
+							// pass;
+						});},
+						get setMainPassphrase () {return __get__ (this, async function (self, passphrase) {
+							var uid = self.session.getCurrentUser ().uid;
+							var options = dict ({'userIds': list ([dict ({'name': uid})]), 'curve': 'ed25519', 'passphrase': passphrase});
+							var keyPair = await openpgp.generateKey (options);
+							var privateKey = keyPair.privateKeyArmored;
+							await firebase.database ().ref (self.__getMainkeyPath ()).set (privateKey);
+							return true;
+						});}
+					});
+					__pragma__ ('<use>' +
+						'event' +
+					'</use>')
+					__pragma__ ('<all>')
+						__all__.Event = Event;
+						__all__.Mainkey = Mainkey;
+						__all__.__name__ = __name__;
+					__pragma__ ('</all>')
+				}
+			}
+		}
+	);
+
 	__nest__ (
 		__all__,
 		'session', {
@@ -2315,17 +2378,20 @@ function __init__ () {
 				__init__: function (__all__) {
 					var __name__ = 'ui';
 					var UISession = __init__ (__world__.ui.session).UISession;
+					var UIMainkey = __init__ (__world__.ui.mainkey).UIMainkey;
 					var UI = __class__ ('UI', [object], {
 						__module__: __name__,
-						get __init__ () {return __get__ (this, function (self, session) {
-							self.ui = dict ({'session': UISession (session)});
+						get __init__ () {return __get__ (this, function (self, session, mainkey) {
+							self.ui = dict ({'session': UISession (session), 'mainkey': UIMainkey (mainkey)});
 						});}
 					});
 					__pragma__ ('<use>' +
+						'ui.mainkey' +
 						'ui.session' +
 					'</use>')
 					__pragma__ ('<all>')
 						__all__.UI = UI;
+						__all__.UIMainkey = UIMainkey;
 						__all__.UISession = UISession;
 						__all__.__name__ = __name__;
 					__pragma__ ('</all>')
@@ -2334,6 +2400,88 @@ function __init__ () {
 		}
 	);
 
+	__nest__ (
+		__all__,
+		'ui.mainkey', {
+			__all__: {
+				__inited__: false,
+				__init__: function (__all__) {
+					var __name__ = 'ui.mainkey';
+					var UIMainkeyInitializer = __class__ ('UIMainkeyInitializer', [object], {
+						__module__: __name__,
+						DIALOG_INIT: '#mainkey-init',
+						get __init__ () {return __get__ (this, function (self, mainkey) {
+							self.mainkey = mainkey;
+							self.__initUI ();
+							self.__bindEvents ();
+						});},
+						get __initUI () {return __get__ (this, function (self) {
+							$ (self.DIALOG_INIT).dialog (dict ({'dialogClass': 'no-close', 'autoOpen': false, 'closeOnEscape': false, 'modal': true, 'buttons': dict ({'Set Main Passphrase': self.onSetMainPassphrase})}));
+						});},
+						get __bindEvents () {return __get__ (this, function (self) {
+							// pass;
+						});},
+						get open () {return __get__ (this, function (self) {
+							$ (self.DIALOG_INIT).dialog ('open');
+						});},
+						get onSetMainPassphrase () {return __get__ (this, async function (self) {
+							var password1 = $ (self.DIALOG_INIT).find ('[name="password1"]').val ();
+							var password2 = $ (self.DIALOG_INIT).find ('[name="password2"]').val ();
+							console.log ('set', password1, password2);
+							await self.mainkey.setMainPassphrase (password1);
+							$ (self.DIALOG_INIT).dialog ('close');
+						});}
+					});
+					var UIMainkeyDecryptor = __class__ ('UIMainkeyDecryptor', [object], {
+						__module__: __name__,
+						DIALOG_DECRYPT: '#mainkey-decrypt',
+						get __init__ () {return __get__ (this, function (self, mainkey) {
+							self.mainkey = mainkey;
+							self.__initUI ();
+							self.__bindEvents ();
+						});},
+						get __initUI () {return __get__ (this, function (self) {
+							$ (self.DIALOG_DECRYPT).dialog (dict ({'dialogClass': 'no-close', 'autoOpen': false, 'closeOnEscape': false, 'modal': true, 'buttons': dict ({'Decrypt': self.onDecrypt})}));
+						});},
+						get __bindEvents () {return __get__ (this, function (self) {
+							// pass;
+						});},
+						get onDecrypt () {return __get__ (this, function (self) {
+							// pass;
+						});},
+						get open () {return __get__ (this, function (self) {
+							$ (self.DIALOG_DECRYPT).dialog ('open');
+						});}
+					});
+					var UIMainkey = __class__ ('UIMainkey', [object], {
+						__module__: __name__,
+						get __init__ () {return __get__ (this, function (self, mainkey) {
+							self.mainkey = mainkey;
+							self.uiMainkeyInitializer = UIMainkeyInitializer (mainkey);
+							self.uiMainkeyDecryptor = UIMainkeyDecryptor (mainkey);
+							self.__bindEvents ();
+						});},
+						get __bindEvents () {return __get__ (this, function (self) {
+							self.mainkey.eventUninitialized.append (self.onUninitialized);
+							self.mainkey.eventUndecrypted.append (self.onUndecrypted);
+						});},
+						get onUninitialized () {return __get__ (this, function (self) {
+							self.uiMainkeyInitializer.open ();
+						});},
+						get onUndecrypted () {return __get__ (this, function (self) {
+							self.uiMainkeyDecryptor.open ();
+						});}
+					});
+					__pragma__ ('<all>')
+						__all__.UIMainkey = UIMainkey;
+						__all__.UIMainkeyDecryptor = UIMainkeyDecryptor;
+						__all__.UIMainkeyInitializer = UIMainkeyInitializer;
+						__all__.__name__ = __name__;
+					__pragma__ ('</all>')
+				}
+			}
+		}
+	);
 	__nest__ (
 		__all__,
 		'ui.session', {
@@ -2390,16 +2538,21 @@ function __init__ () {
 	(function () {
 		var __name__ = '__main__';
 		var Session = __init__ (__world__.session).Session;
+		var Mainkey = __init__ (__world__.mainkey).Mainkey;
 		var UI = __init__ (__world__.ui).UI;
 		var main = function () {
-			var ui = UI (Session ());
+			var session = Session ();
+			var mainkey = Mainkey (session);
+			var ui = UI (session, mainkey);
 		};
 		$ (main);
 		__pragma__ ('<use>' +
+			'mainkey' +
 			'session' +
 			'ui' +
 		'</use>')
 		__pragma__ ('<all>')
+			__all__.Mainkey = Mainkey;
 			__all__.Session = Session;
 			__all__.UI = UI;
 			__all__.__name__ = __name__;

@@ -1,7 +1,10 @@
 <html>
 <head>
 
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<link type="text/css" rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+
 <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase.js"></script>
 <script src="https://cdn.firebase.com/libs/firebaseui/2.5.1/firebaseui.js"></script>
 <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/2.5.1/firebaseui.css" />
@@ -14,6 +17,8 @@ var config = {
 firebase.initializeApp(config);
 </script>
 
+<script src="static/openpgp.min.js"></script>
+
 <script src="bluewater.js"></script>
 <link type="text/css" rel="stylesheet" href="bluewater.css" />
 <title>BlueWater 2-Factor Authenticator</title>
@@ -22,17 +27,39 @@ firebase.initializeApp(config);
 <body>
 
 <div id="session" class="status-unauthenticated">
-    <div class="when-unauthenticated">
-        <div id="firebase-login"></div>
+
+<div class="when-unauthenticated">
+    <div id="firebase-login"></div>
+</div>
+
+<div class="when-authenticated">
+    <button name="signout" type="button">Sign Out</button>
+</div>
+
+<div class="when-authenticated">
+
+
+</div>
+
+</div>
+
+<div class="hidden">
+    
+    <div id="mainkey-init">
+        Seems you are the first time using this service. Please
+        set a main passphrase.
+
+        <div>Main Passphrase:
+        <input type="password" name="password1" /></div>
+        <div>Repeat Main Passphrase:
+        <input type="password" name="password2" /></div>
     </div>
 
-    <div class="when-authenticated">
-        <button name="signout" type="button">Sign Out</button>
+    <div id="mainkey-decrypt">
+        Enter the passphrase to decrypt keyring.
+        <div><input type="password" name="password" /></div>
     </div>
 
-    <div class="when-authenticated">
-        authenticated
-    </div>
 </div>
 
 </body>
