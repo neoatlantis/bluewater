@@ -1,4 +1,5 @@
 from .event import Event
+from .scrypt import Scrypt
 
 class Mainkey:
     
@@ -18,6 +19,10 @@ class Mainkey:
         uid = self.session.getCurrentUser().uid
         return "/" + uid + "/" + self.FIREBASE_MAINKEY
 
+    async def __securePassphrase(self, passphrase):
+        key = await Scrypt(passphrase, self.session.getCurrentUser().uid)
+        return key
+
     async def onLogin(self):
         """Fetch main key."""
         getMainkey = await firebase.database().ref(self.__getMainkeyPath())\
@@ -32,9 +37,10 @@ class Mainkey:
 
     async def decryptMainkey(self, passphrase):
         # if error, raise eventUndecrypted again
+        key = await self.__securePassphrase(passphrase)
         try:
             self.privateKey = openpgp.key.readArmored(self.mainkey)["keys"][0]
-            await self.privateKey.decrypt(passphrase)
+            await self.privateKey.decrypt(key)
         except:
             pass
         finally:
@@ -55,10 +61,11 @@ class Mainkey:
 
     async def setMainPassphrase(self, passphrase):
         uid = self.session.getCurrentUser().uid
+        key = await self.__securePassphrase(passphrase)
         options = {
             "userIds": [{ "name": uid }],
             "curve": "ed25519",
-            "passphrase": passphrase,
+            "passphrase": key,
         }
         keyPair = await openpgp.generateKey(options)
         privateKey = keyPair.privateKeyArmored

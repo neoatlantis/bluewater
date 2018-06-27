@@ -1,5 +1,5 @@
 "use strict";
-// Transcrypt'ed from Python, 2018-06-27 02:36:49
+// Transcrypt'ed from Python, 2018-06-27 06:08:01
 function __init__ () {
     var __symbols__ = ['__py3.6__', '__esv6__'];
     var __all__ = {};
@@ -2224,6 +2224,67 @@ function __init__ () {
     __all__.__setslice__ = __setslice__;
 	__nest__ (
 		__all__,
+		'entries', {
+			__all__: {
+				__inited__: false,
+				__init__: function (__all__) {
+					var __name__ = 'entries';
+					var Event = __init__ (__world__.event).Event;
+					var Entries = __class__ ('Entries', [object], {
+						__module__: __name__,
+						get __init__ () {return __get__ (this, function (self, mainkey) {
+							self.session = mainkey.session;
+							self.mainkey = mainkey;
+							self.__bindEvents ();
+						});},
+						get __bindEvents () {return __get__ (this, function (self) {
+							self.eventEntryAdded = Event ();
+							self.mainkey.eventDecrypted.append (self.onDecrypted);
+						});},
+						get onDecrypted () {return __get__ (this, async function (self) {
+							self.path = '/{}/'.format (self.session.getCurrentUser ().uid);
+							var ref = firebase.database ().ref (self.path);
+							ref.on ('child_added', self.onEntryAdded);
+							ref.on ('child_changed', self.onEntryChanged);
+							ref.on ('child_removed', self.onEntryRemoved);
+						});},
+						get onLogout () {return __get__ (this, async function (self) {
+							firebase.database ().ref (self.path).off ();
+						});},
+						get onEntryAdded () {return __get__ (this, async function (self, data) {
+							if (data.key == self.mainkey.FIREBASE_MAINKEY) {
+								return ;
+							}
+							console.log (data.val (), data.key);
+						});},
+						get onEntryChanged () {return __get__ (this, async function (self, data) {
+							if (data.key == self.mainkey.FIREBASE_MAINKEY) {
+								return ;
+							}
+							// pass;
+						});},
+						get onEntryRemoved () {return __get__ (this, async function (self, data) {
+							if (data.key == self.mainkey.FIREBASE_MAINKEY) {
+								return ;
+							}
+							// pass;
+						});}
+					});
+					__pragma__ ('<use>' +
+						'event' +
+					'</use>')
+					__pragma__ ('<all>')
+						__all__.Entries = Entries;
+						__all__.Event = Event;
+						__all__.__name__ = __name__;
+					__pragma__ ('</all>')
+				}
+			}
+		}
+	);
+
+	__nest__ (
+		__all__,
 		'event', {
 			__all__: {
 				__inited__: false,
@@ -2267,6 +2328,7 @@ function __init__ () {
 				__init__: function (__all__) {
 					var __name__ = 'mainkey';
 					var Event = __init__ (__world__.event).Event;
+					var Scrypt = __init__ (__world__.scrypt).Scrypt;
 					var Mainkey = __class__ ('Mainkey', [object], {
 						__module__: __name__,
 						FIREBASE_MAINKEY: '__main_key__',
@@ -2284,6 +2346,10 @@ function __init__ () {
 							var uid = self.session.getCurrentUser ().uid;
 							return (('/' + uid) + '/') + self.FIREBASE_MAINKEY;
 						});},
+						get __securePassphrase () {return __get__ (this, async function (self, passphrase) {
+							var key = await Scrypt (passphrase, self.session.getCurrentUser ().uid);
+							return key;
+						});},
 						get onLogin () {return __get__ (this, async function (self) {
 							var getMainkey = await firebase.database ().ref (self.__getMainkeyPath ()).once ('value');
 							self.mainkey = getMainkey.val ();
@@ -2297,9 +2363,10 @@ function __init__ () {
 							}
 						});},
 						get decryptMainkey () {return __get__ (this, async function (self, passphrase) {
+							var key = await self.__securePassphrase (passphrase);
 							try {
 								self.privateKey = openpgp.key.readArmored (self.mainkey) ['keys'] [0];
-								await self.privateKey.decrypt (passphrase);
+								await self.privateKey.decrypt (key);
 							}
 							catch (__except0__) {
 								// pass;
@@ -2320,7 +2387,8 @@ function __init__ () {
 						});},
 						get setMainPassphrase () {return __get__ (this, async function (self, passphrase) {
 							var uid = self.session.getCurrentUser ().uid;
-							var options = dict ({'userIds': list ([dict ({'name': uid})]), 'curve': 'ed25519', 'passphrase': passphrase});
+							var key = await self.__securePassphrase (passphrase);
+							var options = dict ({'userIds': list ([dict ({'name': uid})]), 'curve': 'ed25519', 'passphrase': key});
 							var keyPair = await openpgp.generateKey (options);
 							var privateKey = keyPair.privateKeyArmored;
 							await firebase.database ().ref (self.__getMainkeyPath ()).set (privateKey);
@@ -2329,16 +2397,40 @@ function __init__ () {
 					});
 					__pragma__ ('<use>' +
 						'event' +
+						'scrypt' +
 					'</use>')
 					__pragma__ ('<all>')
 						__all__.Event = Event;
 						__all__.Mainkey = Mainkey;
+						__all__.Scrypt = Scrypt;
 						__all__.__name__ = __name__;
 					__pragma__ ('</all>')
 				}
 			}
 		}
 	);
+	__nest__ (
+		__all__,
+		'scrypt', {
+			__all__: {
+				__inited__: false,
+				__init__: function (__all__) {
+					var __name__ = 'scrypt';
+					var Scrypt = function (password, salt) {
+						var scryptFactory = function (resolve, reject) {
+							scrypt (password, salt, dict ({'N': 65536, 'r': 8, 'p': 1, 'dkLen': 128, 'encoding': 'hex'}), resolve);
+						};
+						return new Promise (scryptFactory);
+					};
+					__pragma__ ('<all>')
+						__all__.Scrypt = Scrypt;
+						__all__.__name__ = __name__;
+					__pragma__ ('</all>')
+				}
+			}
+		}
+	);
+
 	__nest__ (
 		__all__,
 		'session', {
@@ -2566,19 +2658,23 @@ function __init__ () {
 		var __name__ = '__main__';
 		var Session = __init__ (__world__.session).Session;
 		var Mainkey = __init__ (__world__.mainkey).Mainkey;
+		var Entries = __init__ (__world__.entries).Entries;
 		var UI = __init__ (__world__.ui).UI;
 		var main = function () {
 			var session = Session ();
 			var mainkey = Mainkey (session);
+			var entries = Entries (mainkey);
 			var ui = UI (session, mainkey);
 		};
 		$ (main);
 		__pragma__ ('<use>' +
+			'entries' +
 			'mainkey' +
 			'session' +
 			'ui' +
 		'</use>')
 		__pragma__ ('<all>')
+			__all__.Entries = Entries;
 			__all__.Mainkey = Mainkey;
 			__all__.Session = Session;
 			__all__.UI = UI;
