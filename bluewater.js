@@ -1,5 +1,5 @@
 "use strict";
-// Transcrypt'ed from Python, 2018-06-27 06:08:01
+// Transcrypt'ed from Python, 2018-06-27 20:01:31
 function __init__ () {
     var __symbols__ = ['__py3.6__', '__esv6__'];
     var __all__ = {};
@@ -2409,6 +2409,7 @@ function __init__ () {
 			}
 		}
 	);
+
 	__nest__ (
 		__all__,
 		'scrypt', {
@@ -2682,7 +2683,6 @@ function __init__ () {
 			__all__.main = main;
 		__pragma__ ('</all>')
 	}) ();
-
     return __all__;
 }
 window ['__init__'] = __init__ ();
