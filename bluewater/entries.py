@@ -23,7 +23,14 @@ class Entries:
 
     async def onEntryAdded(self, data):
         if data.key == self.mainkey.FIREBASE_MAINKEY: return
-        console.log(data.val(), data.key)
+        try:
+            ciphertext = data.val()
+            index = data.key
+            plaintext = await self.mainkey.privateKey.decrypt(ciphertext)
+            payload = JSON.parse(plaintext)
+        except:
+            return
+        self.eventEntryAdded.call(index, payload)
 
     async def onEntryChanged(self, data):
         if data.key == self.mainkey.FIREBASE_MAINKEY: return
@@ -31,4 +38,7 @@ class Entries:
 
     async def onEntryRemoved(self, data):
         if data.key == self.mainkey.FIREBASE_MAINKEY: return
+        pass
+
+    async def addEntry(self, data):
         pass

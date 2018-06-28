@@ -14,6 +14,7 @@ class Mainkey:
         self.eventUndecrypted = Event()
         self.eventDecrypted = Event()
         self.session.eventLogin.append(self.onLogin)
+        self.session.eventLogout.append(self.onLogout)
 
     def __getMainkeyPath(self):
         uid = self.session.getCurrentUser().uid
@@ -35,6 +36,11 @@ class Mainkey:
             console.log("Mainkey retrieved.")
             self.eventUndecrypted.call()
 
+    async def onLogout(self):
+        """Clear all stored keys."""
+        self.privateKey = None
+        self.publicKey = None
+
     async def decryptMainkey(self, passphrase):
         # if error, raise eventUndecrypted again
         key = await self.__securePassphrase(passphrase)
@@ -53,6 +59,7 @@ class Mainkey:
                 console.log("Private key decrypted.")
                 self.publicKey = self.privateKey.toPublic()
                 self.eventDecrypted.call()
+                console.log(self.publicKey.armor())
                 return True
             else:
                 console.error("Private key decryption failure.")

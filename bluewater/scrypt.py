@@ -1,7 +1,7 @@
 def Scrypt(password, salt):
     def scryptFactory(resolve, reject):
         scrypt(password, salt, {
-            "N": 65536,
+            "N": 262144,
             "r": 8,
             "p": 1,
             "dkLen": 128,

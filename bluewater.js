@@ -1,5 +1,5 @@
 "use strict";
-// Transcrypt'ed from Python, 2018-06-27 20:01:31
+// Transcrypt'ed from Python, 2018-06-27 23:30:00
 function __init__ () {
     var __symbols__ = ['__py3.6__', '__esv6__'];
     var __all__ = {};
@@ -2255,7 +2255,16 @@ function __init__ () {
 							if (data.key == self.mainkey.FIREBASE_MAINKEY) {
 								return ;
 							}
-							console.log (data.val (), data.key);
+							try {
+								var ciphertext = data.val ();
+								var index = data.key;
+								var plaintext = await self.mainkey.privateKey.decrypt (ciphertext);
+								var payload = JSON.parse (plaintext);
+							}
+							catch (__except0__) {
+								return ;
+							}
+							self.eventEntryAdded.call (index, payload);
 						});},
 						get onEntryChanged () {return __get__ (this, async function (self, data) {
 							if (data.key == self.mainkey.FIREBASE_MAINKEY) {
@@ -2267,6 +2276,9 @@ function __init__ () {
 							if (data.key == self.mainkey.FIREBASE_MAINKEY) {
 								return ;
 							}
+							// pass;
+						});},
+						get addEntry () {return __get__ (this, async function (self, data) {
 							// pass;
 						});}
 					});
@@ -2282,7 +2294,6 @@ function __init__ () {
 			}
 		}
 	);
-
 	__nest__ (
 		__all__,
 		'event', {
@@ -2341,6 +2352,7 @@ function __init__ () {
 							self.eventUndecrypted = Event ();
 							self.eventDecrypted = Event ();
 							self.session.eventLogin.append (self.onLogin);
+							self.session.eventLogout.append (self.onLogout);
 						});},
 						get __getMainkeyPath () {return __get__ (this, function (self) {
 							var uid = self.session.getCurrentUser ().uid;
@@ -2362,6 +2374,10 @@ function __init__ () {
 								self.eventUndecrypted.call ();
 							}
 						});},
+						get onLogout () {return __get__ (this, async function (self) {
+							self.privateKey = null;
+							self.publicKey = null;
+						});},
 						get decryptMainkey () {return __get__ (this, async function (self, passphrase) {
 							var key = await self.__securePassphrase (passphrase);
 							try {
@@ -2376,6 +2392,7 @@ function __init__ () {
 									console.log ('Private key decrypted.');
 									self.publicKey = self.privateKey.toPublic ();
 									self.eventDecrypted.call ();
+									console.log (self.publicKey.armor ());
 									return true;
 								}
 								else {
@@ -2409,7 +2426,6 @@ function __init__ () {
 			}
 		}
 	);
-
 	__nest__ (
 		__all__,
 		'scrypt', {
@@ -2419,7 +2435,7 @@ function __init__ () {
 					var __name__ = 'scrypt';
 					var Scrypt = function (password, salt) {
 						var scryptFactory = function (resolve, reject) {
-							scrypt (password, salt, dict ({'N': 65536, 'r': 8, 'p': 1, 'dkLen': 128, 'encoding': 'hex'}), resolve);
+							scrypt (password, salt, dict ({'N': 262144, 'r': 8, 'p': 1, 'dkLen': 128, 'encoding': 'hex'}), resolve);
 						};
 						return new Promise (scryptFactory);
 					};
@@ -2683,6 +2699,7 @@ function __init__ () {
 			__all__.main = main;
 		__pragma__ ('</all>')
 	}) ();
+
     return __all__;
 }
 window ['__init__'] = __init__ ();
